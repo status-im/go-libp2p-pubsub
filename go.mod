@@ -1,4 +1,4 @@
-module github.com/libp2p/go-libp2p-pubsub
+module github.com/status-im/go-wakurelay-pubsub
 
 go 1.13
 
@@ -10,6 +10,7 @@ require (
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
 	github.com/libp2p/go-libp2p-core v0.7.0
 	github.com/libp2p/go-libp2p-discovery v0.5.0
+	github.com/libp2p/go-libp2p-pubsub v0.4.1
 	github.com/libp2p/go-libp2p-swarm v0.3.1
 	github.com/libp2p/go-msgio v0.0.6
 	github.com/multiformats/go-multiaddr v0.3.1

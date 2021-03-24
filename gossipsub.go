@@ -169,7 +169,7 @@ var (
 )
 
 // NewWakuRelaySub returns a new PubSub object using WakuRelaySubRouter as the router.
-func NewWakuRelaySub(ctx context.Context, h host.Host, customProtocols []protocol.ID, opts ...Option) (*PubSub, error) {
+func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub, error) {
 	rt := &WakuRelaySubRouter{
 		peers:    make(map[peer.ID]protocol.ID),
 		mesh:     make(map[string]map[peer.ID]struct{}),

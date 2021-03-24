@@ -2,6 +2,7 @@ package pubsub
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -168,7 +169,15 @@ var (
 	GossipSubIWantFollowupTime = 3 * time.Second
 )
 
+// Once https://github.com/status-im/nim-waku/issues/420 is fixed, implement a custom messageIdFn
+func msgIdFn(pmsg *pb.Message) string {
+	hash := sha256.Sum256(pmsg.Data)
+	return string(hash[:])
+}
+
 // NewWakuRelaySub returns a new PubSub object using WakuRelaySubRouter as the router.
+// It has the folowing options set as default: WithMessageSignaturePolicy(StrictNoSign),
+// WithNoAuthor, and WithMessageIdFn that hashes the message content
 func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub, error) {
 	rt := &WakuRelaySubRouter{
 		peers:    make(map[peer.ID]protocol.ID),
@@ -203,6 +212,12 @@ func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub,
 
 	// use the withInternalTracer option to hook up the tag tracer
 	opts = append(opts, withInternalTracer(rt.tagTracer))
+
+	// default options required by WakuRelay
+	opts = append(opts, WithMessageSignaturePolicy(StrictNoSign))
+	opts = append(opts, WithNoAuthor())
+	opts = append(opts, WithMessageIdFn(msgIdFn))
+
 	return NewPubSub(ctx, h, rt, opts...)
 }
 

@@ -175,7 +175,7 @@ func msgIdFn(pmsg *pb.Message) string {
 	return string(hash[:])
 }
 
-func createWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) *WakuRelaySubRouter {
+func createWakuRelaySub(ctx context.Context, h host.Host) *WakuRelaySubRouter {
 	rt := &WakuRelaySubRouter{
 		peers:    make(map[peer.ID]protocol.ID),
 		mesh:     make(map[string]map[peer.ID]struct{}),
@@ -207,6 +207,15 @@ func createWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) *WakuR
 		tagTracer: newTagTracer(h.ConnManager()),
 	}
 
+	return rt
+}
+
+// NewWakuRelaySub returns a new PubSub object using WakuRelaySubRouter as the router.
+// It has the folowing options set as default: WithMessageSignaturePolicy(StrictNoSign),
+// WithNoAuthor, and WithMessageIdFn that hashes the message content
+func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub, error) {
+	rt := createWakuRelaySub(ctx, h)
+
 	// use the withInternalTracer option to hook up the tag tracer
 	opts = append(opts, withInternalTracer(rt.tagTracer))
 
@@ -215,14 +224,6 @@ func createWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) *WakuR
 	opts = append(opts, WithNoAuthor())
 	opts = append(opts, WithMessageIdFn(msgIdFn))
 
-	return rt
-}
-
-// NewWakuRelaySub returns a new PubSub object using WakuRelaySubRouter as the router.
-// It has the folowing options set as default: WithMessageSignaturePolicy(StrictNoSign),
-// WithNoAuthor, and WithMessageIdFn that hashes the message content
-func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub, error) {
-	rt := createWakuRelaySub(ctx, h, opts...)
 	return NewPubSub(ctx, h, rt, opts...)
 }
 
@@ -231,7 +232,16 @@ func NewWakuRelaySub(ctx context.Context, h host.Host, opts ...Option) (*PubSub,
 // WithNoAuthor, and WithMessageIdFn that hashes the message content
 // Allows setting a function for protocol id matching
 func NewWakuRelaySubWithMatcherFunc(ctx context.Context, h host.Host, match func(string) bool, opts ...Option) (*PubSub, error) {
-	rt := createWakuRelaySub(ctx, h, opts...)
+	rt := createWakuRelaySub(ctx, h)
+
+	// use the withInternalTracer option to hook up the tag tracer
+	opts = append(opts, withInternalTracer(rt.tagTracer))
+
+	// default options required by WakuRelay
+	opts = append(opts, WithMessageSignaturePolicy(StrictNoSign))
+	opts = append(opts, WithNoAuthor())
+	opts = append(opts, WithMessageIdFn(msgIdFn))
+
 	return NewPubSubWithMatcherFunc(ctx, h, rt, match, opts...)
 }
 
